@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Cnames from Akamai</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<style>
+    table,tr,td{
+        border:1px solid #333;border-collapse:collapse;
+    }
+    table{
+        margin:10px;
+    }
+
+    .loading { 
+		position: absolute; 
+        z-index: 9999;
+		top: 0; 
+        left: 0;
+		width: 100%; 
+        height: 100%;
+		display: none;
+	}
+
+	.loading .mask {
+		position:  absolute;
+		width: 100%; 
+        height: 100%;
+		background-color: #444; 
+        opacity: 0.2;
+	}
+	.loading .animation {
+		width: 64px; 
+        height: 64px;
+		margin: auto; 
+        margin-top: 40px;
+		background: url('https://i.imgur.com/6pCtQAW.gif');
+	}
+</style>
+<body>
+    <div class="step1">
+        <h2>Step 1</h2>
+        <p>Get all the group items under the credential provided.<br>(&nbsp;https://.luna.akamaiapis.net/&nbsp;)</p>
+        <button id="s1">Get Items</button>
+    </div>
+    <div class="step2">
+        <h2>Step 2</h2>
+        <p>Get propertyId, productionVersion, groupId, contractId of each group item.</p>
+        <button id="s2">Get Properties</button>
+    </div>
+    <div class="step3">
+        <h2>Step 3</h2>
+        <p>Get hosnames of each property.</p>
+        <button id="s3">Get Hostnames</button>
+    </div>
+    <div class="loading">
+        <div class="mask"></div>
+        <div class="animation">
+        </div>
+    </div>
+</body>
+<script>
+    $('.step2').hide();
+    $('.step3').hide();
+    
+    $('#s1').click(function (e) { 
+        let t1=Date.now();
+        e.preventDefault();
+        $('.loading').show();
+        $.ajax({
+            type: "get",
+            url: "get_group_item_with_layer.php",
+            dataType: "json",
+            success: function (res) {
+                $('.loading').hide();
+                $('.step2').show();
+                let t2=Date.now();
+                let duration = (t2-t1)/1000;
+                console.log('s1-suc',duration,res);
+            },
+            error: function (res) {
+                $('.loading').hide();
+                alert('check console!')
+                let t2=Date.now();
+                let duration = (t2-t1)/1000;
+                console.log('s1-err',duration,res);
+            }
+        });
+    });
+    
+    $('#s2').click(function (e) { 
+        let t1=Date.now();
+        $('.loading').show();
+        e.preventDefault();
+        $.ajax({
+            type: "get",
+            url: "get_property_of_group_items.php",
+            dataType: "json",
+            success: function (res) {
+                $('.loading').hide();
+                $('.step3').show();
+                let t2=Date.now();
+                let duration = (t2-t1)/1000;
+                console.log('s2-suc',duration,res);
+            },
+            error: function (res) {
+                $('.loading').hide();
+                alert('check console!')
+                let t2=Date.now();
+                let duration = (t2-t1)/1000;
+                console.log('s2-err',duration,res);
+            }
+        });
+    });
+
+    $('#s3').click(function (e) { 
+        let t1=Date.now();
+        $('.loading').show();
+        e.preventDefault();
+        $.ajax({
+            type: "get",
+            url: "get_hostname_of_properties.php",
+            dataType: "json",
+            success: function (res) {
+                $('.loading').hide();
+                let t2=Date.now();
+                let duration = (t2-t1)/1000;
+                console.log('s3-suc',duration,res);
+                let r=res.result;
+                $.each(r, function (contractId, items) {
+                    $('.step3').append(`<h4>${contractId}</h4>`);
+
+                    $.each(items, function (idx, ele) {
+                        $('.step3').append(`<h5>${ele.groupName} (${ele.groupId})</h5>`);
+                        $('.step3').append(`<ul>`);  
+                            $.each(ele.hostnames, function (i, hostnames) {
+                                $.each(hostnames, function (i3, info) {                                      
+                                    console.log(idx,i,i3,info) 
+                                    $('.step3').append(`<li>${info.cnameFrom}</li>`);
+                                });
+                            });
+                        $('.step3').append(`</li>`);
+                    });
+                     
+                });
+            },
+            error: function (res) {
+                $('.loading').hide();
+                alert('check console!')
+                let t2=Date.now();
+                let duration = (t2-t1)/1000;
+                console.log('s3-err',duration,res);
+                console.log(res.responseText);
+            }
+        });
+    });
+</script>
+</html>
