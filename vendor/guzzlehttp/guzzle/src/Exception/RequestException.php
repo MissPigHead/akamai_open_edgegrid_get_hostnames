@@ -110,9 +110,23 @@ class RequestException extends TransferException
             $message .= ":\n{$summary}\n";
         }
 
+        // customize error log
+        if($response->getStatusCode()!=200){
+            $file_path = substr(dirname(__FILE__),0,strpos(dirname(__FILE__),"vendor\guzzlehttp\guzzle\src\Exception"));
+            $file_name=$response->getStatusCode().'_'.$response->getReasonPhrase().'_'.date("YmdHis").'.txt';
+            $msg = $label."\r\n".$request->getMethod()."\r\n".$uri."\r\n".$response->getStatusCode()." ".$response->getReasonPhrase();
+            if($summary!==null){
+                $msg .= "\r\n".$summary."}";
+            }
+
+            $fp = fopen($file_path.$file_name,"a");
+            fwrite($fp,var_export($msg,true)."\r\n");
+            fclose($fp);
+        }
+
         return new $className($message, $request, $response, $previous, $ctx);
     }
-
+    
     /**
      * Get a short summary of the response
      *
