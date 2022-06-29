@@ -680,11 +680,13 @@ class Authentication
     protected function buildQueryString($query)
     {
         if (defined('PHP_QUERY_RFC3986')) {
-            return http_build_query($query, null, '&', PHP_QUERY_RFC3986);
+            // return http_build_query($query, null, '&', PHP_QUERY_RFC3986);
+            return http_build_query($query, "", '&', PHP_QUERY_RFC3986);
         }
 
         // @codeCoverageIgnoreStart
-        return str_replace('+', '%20', http_build_query($query, null, '&'));
+        // return str_replace('+', '%20', http_build_query($query, null, '&'));
+        return str_replace('+', '%20', http_build_query($query, "", '&'));
         // @codeCoverageIgnoreEnd
     }
 }
